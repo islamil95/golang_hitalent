@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_PORT: "8080"
+      DATABASE_DSN: "host=db user=postgres password=postgres dbname=org_structure port=5432 sslmode=disable"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: org_structure
+    ports:
+      - "5433:5432"   # хост:контейнер — 5433 на хосте, чтобы не конфликтовать с локальным PostgreSQL на 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
